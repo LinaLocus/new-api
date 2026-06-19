@@ -1,0 +1,264 @@
+/* 终端风格登录页样式 — 独立作用域，类名前缀 moon-login- 避免污染全局 */
+
+.moon-login-root {
+  position: relative;
+  min-height: calc(100vh - 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #e6edf3;
+  background:
+    linear-gradient(rgba(99, 102, 241, 0.06) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(99, 102, 241, 0.06) 1px, transparent 1px) 0 0 / 40px 40px,
+    radial-gradient(ellipse at 20% 0%, #1a1f3a 0%, #0a0e1a 55%);
+}
+
+.moon-login-terminal {
+  width: 100%;
+  max-width: 1080px;
+  background: #0d1117;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+}
+
+.moon-login-head {
+  height: 46px;
+  background: #161b22;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(99, 102, 241, 0.15);
+  position: relative;
+}
+
+.moon-login-dots {
+  display: flex;
+  gap: 8px;
+}
+
+.moon-login-dots span {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.moon-login-dots .d-red { background: #ff5f56; }
+.moon-login-dots .d-yellow { background: #ffbd2e; }
+.moon-login-dots .d-green { background: #27c93f; }
+
+.moon-login-headtitle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  color: #7d8590;
+  font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+  pointer-events: none;
+}
+
+.moon-login-body {
+  display: flex;
+  min-height: 480px;
+}
+
+.moon-login-code {
+  flex: 1.15;
+  padding: 26px 28px;
+  font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.7;
+  border-right: 1px solid rgba(99, 102, 241, 0.15);
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow: hidden;
+}
+
+.moon-login-cursor {
+  display: inline-block;
+  width: 8px;
+  height: 17px;
+  background: #22c55e;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  animation: moon-login-blink 1s step-end infinite;
+}
+
+@keyframes moon-login-blink {
+  50% { opacity: 0; }
+}
+
+.moon-tok-prompt { color: #22c55e; font-weight: 700; }
+.moon-tok-kw { color: #c792ea; }
+.moon-tok-str { color: #ecc48d; }
+.moon-tok-fn { color: #82aaff; }
+.moon-tok-num { color: #f78c6c; }
+.moon-tok-comment { color: #5c6370; }
+.moon-tok-out { color: #22c55e; font-weight: 600; }
+.moon-tok-plain { color: #abb2bf; }
+
+.moon-login-pane {
+  width: 420px;
+  padding: 44px 40px;
+  background: #11151f;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.moon-login-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e6edf3;
+}
+
+.moon-login-title .arrow {
+  color: #6366f1;
+  font-family: monospace;
+}
+
+.moon-login-field {
+  margin-bottom: 20px;
+}
+
+.moon-login-field label {
+  display: block;
+  font-size: 13px;
+  color: #7d8590;
+  margin-bottom: 8px;
+}
+
+.moon-login-inputwrap {
+  display: flex;
+  align-items: center;
+  background: #0d1117;
+  border: 1px solid rgba(99, 102, 241, 0.15);
+  border-radius: 9px;
+  padding: 0 12px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.moon-login-inputwrap:focus-within {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+}
+
+.moon-login-inputwrap .ico {
+  color: #7d8590;
+  margin-right: 8px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+}
+
+.moon-login-inputwrap input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #e6edf3;
+  font-size: 15px;
+  padding: 13px 0;
+}
+
+.moon-login-inputwrap input::placeholder {
+  color: #4b5563;
+}
+
+.moon-login-inputwrap .eye {
+  color: #7d8590;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+}
+
+.moon-login-submit {
+  margin-top: 8px;
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #1e1b4b, #0d1117);
+  border: 1px solid #6366f1;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: box-shadow 0.25s, transform 0.1s;
+  box-shadow: 0 0 22px rgba(99, 102, 241, 0.35);
+}
+
+.moon-login-submit:hover {
+  box-shadow: 0 0 32px rgba(139, 92, 246, 0.6);
+}
+
+.moon-login-submit:active {
+  transform: translateY(1px);
+}
+
+.moon-login-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.moon-login-links {
+  margin-top: 24px;
+  text-align: center;
+  font-family: monospace;
+  color: #7d8590;
+  font-size: 14px;
+}
+
+.moon-login-links a {
+  color: #7d8590;
+  text-decoration: none;
+  margin: 0 6px;
+  cursor: pointer;
+}
+
+.moon-login-links a:hover {
+  color: #6366f1;
+}
+
+.moon-login-terms {
+  margin-top: 18px;
+  font-size: 13px;
+  color: #7d8590;
+}
+
+.moon-login-terms a {
+  color: #82aaff;
+  margin: 0 4px;
+}
+
+.moon-login-turnstile {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+/* 窄屏：隐藏左侧终端代码区，只留登录框 */
+@media (max-width: 768px) {
+  .moon-login-code {
+    display: none;
+  }
+  .moon-login-pane {
+    width: 100%;
+  }
+  .moon-login-body {
+    min-height: auto;
+  }
+}

@@ -66,6 +66,109 @@ import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import './login-terminal.css';
+
+// 终端左侧逐字打印的代码内容（token 分段，带语法高亮 class）
+const TERMINAL_TOKENS = [
+  ['$ ', 'moon-tok-prompt'],
+  ['python3 quickstart.py\n', 'moon-tok-plain'],
+  ['import', 'moon-tok-kw'],
+  [' openai\n', 'moon-tok-plain'],
+  ['client = openai.', 'moon-tok-plain'],
+  ['OpenAI', 'moon-tok-fn'],
+  ['(\n', 'moon-tok-plain'],
+  ['    api_key=', 'moon-tok-plain'],
+  ['"sk-your-api-key"', 'moon-tok-str'],
+  [',\n', 'moon-tok-plain'],
+  ['    base_url=', 'moon-tok-plain'],
+  ['"https://api.moonisapi.com/v1"', 'moon-tok-str'],
+  ['\n', 'moon-tok-plain'],
+  [')\n', 'moon-tok-plain'],
+  ['response = client.chat.completions.', 'moon-tok-plain'],
+  ['create', 'moon-tok-fn'],
+  ['(\n', 'moon-tok-plain'],
+  ['    model=', 'moon-tok-plain'],
+  ['"gpt-5.5"', 'moon-tok-str'],
+  [',\n', 'moon-tok-plain'],
+  ['    messages=[{', 'moon-tok-plain'],
+  ['"role"', 'moon-tok-str'],
+  [': ', 'moon-tok-plain'],
+  ['"user"', 'moon-tok-str'],
+  [',\n', 'moon-tok-plain'],
+  ['        ', 'moon-tok-plain'],
+  ['"content"', 'moon-tok-str'],
+  [': ', 'moon-tok-plain'],
+  ['"Hello!"', 'moon-tok-str'],
+  ['}]\n', 'moon-tok-plain'],
+  [')\n', 'moon-tok-plain'],
+  ['print', 'moon-tok-fn'],
+  ['(response.choices[', 'moon-tok-plain'],
+  ['0', 'moon-tok-num'],
+  ['].message.content)\n', 'moon-tok-plain'],
+  ['# Output:\n', 'moon-tok-comment'],
+  ['Hello! How can I help you today?\n', 'moon-tok-out'],
+];
+
+// 打字机效果组件：逐字打印 TERMINAL_TOKENS，打完停留后循环
+const TerminalTyper = () => {
+  const [segments, setSegments] = useState([]);
+  const stateRef = useRef({ ti: 0, ci: 0, timer: null, mounted: true });
+
+  useEffect(() => {
+    const s = stateRef.current;
+    s.mounted = true;
+    s.ti = 0;
+    s.ci = 0;
+
+    const step = () => {
+      if (!s.mounted) return;
+      if (s.ti >= TERMINAL_TOKENS.length) {
+        s.timer = setTimeout(() => {
+          if (!s.mounted) return;
+          s.ti = 0;
+          s.ci = 0;
+          setSegments([]);
+          step();
+        }, 2500);
+        return;
+      }
+      const [txt, cls] = TERMINAL_TOKENS[s.ti];
+      s.ci += 1;
+      const partial = txt.slice(0, s.ci);
+      setSegments((prev) => {
+        const next = prev.slice(0, s.ti);
+        next[s.ti] = { cls, text: partial };
+        return next;
+      });
+      const lastChar = txt[s.ci - 1];
+      if (s.ci >= txt.length) {
+        s.ti += 1;
+        s.ci = 0;
+      }
+      const delay = lastChar === '\n' ? 80 : lastChar === ' ' ? 18 : 26;
+      s.timer = setTimeout(step, delay);
+    };
+
+    step();
+    return () => {
+      s.mounted = false;
+      if (s.timer) clearTimeout(s.timer);
+    };
+  }, []);
+
+  return (
+    <div className='moon-login-code'>
+      {segments.map((seg, i) =>
+        seg ? (
+          <span key={i} className={seg.cls}>
+            {seg.text}
+          </span>
+        ) : null,
+      )}
+      <span className='moon-login-cursor' />
+    </div>
+  );
+};
 
 const LoginForm = () => {
   let navigate = useNavigate();
@@ -105,6 +208,7 @@ const LoginForm = () => {
   const [passkeySupported, setPasskeySupported] = useState(false);
   const [passkeyLoading, setPasskeyLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [hasUserAgreement, setHasUserAgreement] = useState(false);
   const [hasPrivacyPolicy, setHasPrivacyPolicy] = useState(false);
   const [githubButtonState, setGithubButtonState] = useState('idle');
@@ -946,36 +1050,141 @@ const LoginForm = () => {
     );
   };
 
-  return (
-    <div className='classic-page-fill relative overflow-hidden bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8'>
-      {/* 背景模糊晕染球 */}
-      <div
-        className='blur-ball blur-ball-indigo'
-        style={{ top: '-80px', right: '-80px', transform: 'none' }}
-      />
-      <div
-        className='blur-ball blur-ball-teal'
-        style={{ top: '50%', left: '-120px' }}
-      />
-      <div className='w-full max-w-sm mt-[60px]'>
-        {showEmailLogin ||
-        !hasOAuthLoginOptions
-          ? renderEmailLoginForm()
-          : renderOAuthOptions()}
-        {renderWeChatLoginModal()}
-        {render2FAModal()}
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e);
+    }
+  };
 
-        {turnstileEnabled && (
-          <div className='flex justify-center mt-6'>
-            <Turnstile
-              sitekey={turnstileSiteKey}
-              onVerify={(token) => {
-                setTurnstileToken(token);
-              }}
-            />
+  return (
+    <div className='moon-login-root'>
+      <div className='moon-login-terminal'>
+        <div className='moon-login-head'>
+          <div className='moon-login-dots'>
+            <span className='d-red' />
+            <span className='d-yellow' />
+            <span className='d-green' />
           </div>
-        )}
+          <div className='moon-login-headtitle'>auth@moonapi:~/login</div>
+        </div>
+        <div className='moon-login-body'>
+          <TerminalTyper />
+          <div className='moon-login-pane'>
+            <div className='moon-login-title'>
+              <span className='arrow'>&gt;</span>
+              {t('密码登录')}
+            </div>
+
+            <div className='moon-login-field'>
+              <label>{t('用户名或邮箱')}</label>
+              <div className='moon-login-inputwrap'>
+                <span className='ico'>
+                  <IconMail />
+                </span>
+                <input
+                  type='text'
+                  autoComplete='username'
+                  placeholder={t('请输入您的用户名或邮箱地址')}
+                  value={username}
+                  onChange={(e) => handleChange('username', e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+              </div>
+            </div>
+
+            <div className='moon-login-field'>
+              <label>{t('密码')}</label>
+              <div className='moon-login-inputwrap'>
+                <span className='ico'>
+                  <IconLock />
+                </span>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete='current-password'
+                  placeholder={t('请输入您的密码')}
+                  value={password}
+                  onChange={(e) => handleChange('password', e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
+                <span
+                  className='eye'
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  <IconKey />
+                </span>
+              </div>
+            </div>
+
+            {(hasUserAgreement || hasPrivacyPolicy) && (
+              <div className='moon-login-terms'>
+                <Checkbox
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                >
+                  <Text size='small' style={{ color: '#7d8590' }}>
+                    {t('我已阅读并同意')}
+                    {hasUserAgreement && (
+                      <a
+                        href='/user-agreement'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {t('用户协议')}
+                      </a>
+                    )}
+                    {hasUserAgreement && hasPrivacyPolicy && t('和')}
+                    {hasPrivacyPolicy && (
+                      <a
+                        href='/privacy-policy'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {t('隐私政策')}
+                      </a>
+                    )}
+                  </Text>
+                </Checkbox>
+              </div>
+            )}
+
+            {turnstileEnabled && (
+              <div className='moon-login-turnstile'>
+                <Turnstile
+                  sitekey={turnstileSiteKey}
+                  onVerify={(token) => {
+                    setTurnstileToken(token);
+                  }}
+                />
+              </div>
+            )}
+
+            <button
+              className='moon-login-submit'
+              style={{ marginTop: '20px' }}
+              onClick={handleSubmit}
+              disabled={
+                loginLoading ||
+                ((hasUserAgreement || hasPrivacyPolicy) && !agreedToTerms)
+              }
+            >
+              {loginLoading ? t('登录中...') : t('登录系统')} &rarr;
+            </button>
+
+            <div className='moon-login-links'>
+              {!status.self_use_mode_enabled && (
+                <>
+                  [ <Link to='/register'>{t('注册')}</Link> ]
+                </>
+              )}
+              &nbsp;&nbsp;[{' '}
+              <a onClick={handleResetPasswordClick}>{t('忘记密码')}</a> ]
+            </div>
+          </div>
+        </div>
       </div>
+
+      {renderWeChatLoginModal()}
+      {render2FAModal()}
     </div>
   );
 };
