@@ -34,6 +34,11 @@ export const useActualTheme = () => useContext(ActualThemeContext);
 const SetThemeContext = createContext(null);
 export const useSetTheme = () => useContext(SetThemeContext);
 
+// 强制主题：某些页面（登录/注册/首页等深色设计页）需要锁定深色，
+// 无论全局主题如何切换都不受影响。提供 push/pop 接口。
+const ForceThemeContext = createContext(null);
+export const useForceTheme = () => useContext(ForceThemeContext);
+
 // 检测系统主题偏好
 const getSystemTheme = () => {
   if (typeof window !== 'undefined' && window.matchMedia) {
@@ -47,16 +52,20 @@ const getSystemTheme = () => {
 export const ThemeProvider = ({ children }) => {
   const [theme, _setTheme] = useState(() => {
     try {
-      return localStorage.getItem('theme-mode') || 'auto';
+      return localStorage.getItem('theme-mode') || 'dark';
     } catch {
-      return 'auto';
+      return 'dark';
     }
   });
 
   const [systemTheme, setSystemTheme] = useState(getSystemTheme());
 
-  // 计算实际应用的主题
-  const actualTheme = theme === 'auto' ? systemTheme : theme;
+  // 强制主题（如登录页锁定深色）。null 表示不强制，跟随用户设置。
+  const [forceTheme, setForceTheme] = useState(null);
+
+  // 计算实际应用的主题：强制主题优先，否则用户设置，auto 跟随系统
+  const userTheme = theme === 'auto' ? systemTheme : theme;
+  const actualTheme = forceTheme || userTheme;
 
   // 监听系统主题变化
   useEffect(() => {
@@ -106,9 +115,13 @@ export const ThemeProvider = ({ children }) => {
 
   return (
     <SetThemeContext.Provider value={setTheme}>
-      <ActualThemeContext.Provider value={actualTheme}>
-        <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>
-      </ActualThemeContext.Provider>
+      <ForceThemeContext.Provider value={setForceTheme}>
+        <ActualThemeContext.Provider value={actualTheme}>
+          <ThemeContext.Provider value={theme}>
+            {children}
+          </ThemeContext.Provider>
+        </ActualThemeContext.Provider>
+      </ForceThemeContext.Provider>
     </SetThemeContext.Provider>
   );
 };
