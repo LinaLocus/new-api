@@ -66,6 +66,7 @@ import LinuxDoIcon from '../common/logo/LinuxDoIcon';
 import TwoFAVerification from './TwoFAVerification';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import { useForceDarkTheme } from '../../hooks/common/useForceDarkTheme';
 import './login-terminal.css';
 
 // 终端左侧逐字打印的代码内容（token 分段，带语法高亮 class）
@@ -111,7 +112,8 @@ const TERMINAL_TOKENS = [
 
 // 打字机效果组件：逐字打印 TERMINAL_TOKENS，打完停留后循环
 const TerminalTyper = () => {
-  const [segments, setSegments] = useState([]);
+  const [done, setDone] = useState([]); // 已完整打印的 token 列表
+  const [cur, setCur] = useState(null); // 当前正在打印的 token { cls, text }
   const stateRef = useRef({ ti: 0, ci: 0, timer: null, mounted: true });
 
   useEffect(() => {
@@ -119,33 +121,41 @@ const TerminalTyper = () => {
     s.mounted = true;
     s.ti = 0;
     s.ci = 0;
+    setDone([]);
+    setCur(null);
 
     const step = () => {
       if (!s.mounted) return;
+
+      // 全部打完 -> 停留后重置循环
       if (s.ti >= TERMINAL_TOKENS.length) {
         s.timer = setTimeout(() => {
           if (!s.mounted) return;
           s.ti = 0;
           s.ci = 0;
-          setSegments([]);
+          setDone([]);
+          setCur(null);
           step();
         }, 2500);
         return;
       }
+
       const [txt, cls] = TERMINAL_TOKENS[s.ti];
       s.ci += 1;
-      const partial = txt.slice(0, s.ci);
-      setSegments((prev) => {
-        const next = prev.slice(0, s.ti);
-        next[s.ti] = { cls, text: partial };
-        return next;
-      });
       const lastChar = txt[s.ci - 1];
+
       if (s.ci >= txt.length) {
+        // 当前 token 打完整，移入 done，清空 cur，再前进
+        setDone((prev) => [...prev, { cls, text: txt }]);
+        setCur(null);
         s.ti += 1;
         s.ci = 0;
+      } else {
+        // 仍在打当前 token
+        setCur({ cls, text: txt.slice(0, s.ci) });
       }
-      const delay = lastChar === '\n' ? 80 : lastChar === ' ' ? 18 : 26;
+
+      const delay = lastChar === '\n' ? 90 : lastChar === ' ' ? 18 : 28;
       s.timer = setTimeout(step, delay);
     };
 
@@ -158,13 +168,12 @@ const TerminalTyper = () => {
 
   return (
     <div className='moon-login-code'>
-      {segments.map((seg, i) =>
-        seg ? (
-          <span key={i} className={seg.cls}>
-            {seg.text}
-          </span>
-        ) : null,
-      )}
+      {done.map((seg, i) => (
+        <span key={i} className={seg.cls}>
+          {seg.text}
+        </span>
+      ))}
+      {cur && <span className={cur.cls}>{cur.text}</span>}
       <span className='moon-login-cursor' />
     </div>
   );
@@ -173,6 +182,7 @@ const TerminalTyper = () => {
 const LoginForm = () => {
   let navigate = useNavigate();
   const { t } = useTranslation();
+  useForceDarkTheme();
   const githubButtonTextKeyByState = {
     idle: '使用 GitHub 继续',
     redirecting: '正在跳转 GitHub...',

@@ -31,11 +31,13 @@ import { Button, Card, Form, Typography } from '@douyinfe/semi-ui';
 import { IconMail } from '@douyinfe/semi-icons';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useForceDarkTheme } from '../../hooks/common/useForceDarkTheme';
 
 const { Text, Title } = Typography;
 
 const PasswordResetForm = () => {
   const { t } = useTranslation();
+  useForceDarkTheme();
   const [inputs, setInputs] = useState({
     email: '',
   });

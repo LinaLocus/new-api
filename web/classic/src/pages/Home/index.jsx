@@ -40,6 +40,8 @@ import {
 } from '@douyinfe/semi-icons';
 import { Link } from 'react-router-dom';
 import NoticeModal from '../../components/layout/NoticeModal';
+import RippleGrid from '../../components/common/RippleGrid';
+import { useForceDarkTheme } from '../../hooks/common/useForceDarkTheme';
 import {
   Moonshot,
   OpenAI,
@@ -67,6 +69,7 @@ const { Text } = Typography;
 
 const Home = () => {
   const { t, i18n } = useTranslation();
+  useForceDarkTheme();
   const [statusState] = useContext(StatusContext);
   const actualTheme = useActualTheme();
   const [homePageContentLoaded, setHomePageContentLoaded] = useState(false);
@@ -158,11 +161,24 @@ const Home = () => {
       {homePageContentLoaded && homePageContent === '' ? (
         <div className='classic-home-default w-full overflow-x-hidden'>
           {/* Banner 部分 */}
-          <div className='classic-home-hero w-full border-b border-semi-color-border relative overflow-x-hidden'>
-            {/* 背景模糊晕染球 */}
-            <div className='blur-ball blur-ball-indigo' />
-            <div className='blur-ball blur-ball-teal' />
-            <div className='flex items-center justify-center px-4 pt-24 pb-8'>
+          <div className='classic-home-hero w-full border-b border-semi-color-border relative overflow-x-hidden' style={{ background: 'radial-gradient(ellipse at 50% 0%, #161b3a 0%, #0a0e1a 60%)' }}>
+            {/* RippleGrid 涟漪网格背景 */}
+            <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
+              <RippleGrid
+                enableRainbow={false}
+                gridColor='#6366f1'
+                rippleIntensity={0.02}
+                gridSize={15}
+                gridThickness={18}
+                glowIntensity={0.15}
+                opacity={0.55}
+                fadeDistance={1.6}
+                vignetteStrength={2.0}
+                mouseInteraction={true}
+                mouseInteractionRadius={1.2}
+              />
+            </div>
+            <div className='flex items-center justify-center px-4 pt-24 pb-8 relative' style={{ zIndex: 1 }}>
               {/* 居中内容区 */}
               <div className='flex flex-col items-center justify-center text-center max-w-4xl mx-auto'>
                 <div className='flex flex-col items-center justify-center mb-6 md:mb-8'>

@@ -218,19 +218,21 @@
   margin-top: 24px;
   text-align: center;
   font-family: monospace;
-  color: #7d8590;
+  color: #8b96a5;
   font-size: 14px;
 }
 
 .moon-login-links a {
-  color: #7d8590;
+  color: #a5b4fc;
   text-decoration: none;
   margin: 0 6px;
   cursor: pointer;
+  transition: color 0.2s, text-shadow 0.2s;
 }
 
 .moon-login-links a:hover {
-  color: #6366f1;
+  color: #c4b5fd;
+  text-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
 }
 
 .moon-login-terms {

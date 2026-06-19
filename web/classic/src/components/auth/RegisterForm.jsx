@@ -64,10 +64,12 @@ import { UserContext } from '../../context/User';
 import { StatusContext } from '../../context/Status';
 import { useTranslation } from 'react-i18next';
 import { SiDiscord } from 'react-icons/si';
+import { useForceDarkTheme } from '../../hooks/common/useForceDarkTheme';
 
 const RegisterForm = () => {
   let navigate = useNavigate();
   const { t } = useTranslation();
+  useForceDarkTheme();
   const githubButtonTextKeyByState = {
     idle: '使用 GitHub 继续',
     redirecting: '正在跳转 GitHub...',
