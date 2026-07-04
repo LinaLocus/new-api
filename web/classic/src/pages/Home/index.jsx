@@ -42,6 +42,7 @@ import { Link } from 'react-router-dom';
 import NoticeModal from '../../components/layout/NoticeModal';
 import RippleGrid from '../../components/common/RippleGrid';
 import { useForceDarkTheme } from '../../hooks/common/useForceDarkTheme';
+import DOMPurify from 'dompurify';
 import {
   Moonshot,
   OpenAI,
@@ -360,7 +361,7 @@ const Home = () => {
           ) : (
             <div
               className='mt-[60px]'
-              dangerouslySetInnerHTML={{ __html: homePageContent }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(homePageContent) }}
             />
           )}
         </div>
