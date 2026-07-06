@@ -20,6 +20,7 @@ import { type ReactNode, useState, useEffect } from 'react'
 import { Link, useLocation } from '@tanstack/react-router'
 import { ChevronRight } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import ShinyText from '@/components/ui/shiny-text'
 import {
   Collapsible,
   CollapsibleContent,
@@ -120,6 +121,8 @@ function NavBadge({ children }: { children: ReactNode }) {
  */
 function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
   const { setOpenMobile } = useSidebar()
+  const isMoonStudio = item.url === '/moon-studio'
+
   return (
     <SidebarMenuItem>
       <SidebarMenuButton
@@ -128,7 +131,19 @@ function SidebarMenuLink({ item, href }: { item: NavLink; href: string }) {
         render={<Link to={item.url} onClick={() => setOpenMobile(false)} />}
       >
         {item.icon && <item.icon className='shrink-0' />}
-        <span className='min-w-0 flex-1 truncate'>{item.title}</span>
+        {isMoonStudio ? (
+          <ShinyText
+            text={item.title}
+            speed={3}
+            delay={1}
+            color="hsl(var(--sidebar-foreground))"
+            shineColor="hsl(var(--primary))"
+            spread={90}
+            className="min-w-0 flex-1 truncate"
+          />
+        ) : (
+          <span className='min-w-0 flex-1 truncate'>{item.title}</span>
+        )}
         {item.badge && <NavBadge>{item.badge}</NavBadge>}
       </SidebarMenuButton>
     </SidebarMenuItem>

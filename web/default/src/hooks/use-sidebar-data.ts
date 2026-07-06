@@ -26,6 +26,7 @@ import {
   LayoutDashboard,
   ListTodo,
   MessageSquare,
+  Palette,
   Radio,
   Settings,
   Ticket,
@@ -60,6 +61,17 @@ export function useSidebarData(): SidebarData {
             title: t('Chat'),
             icon: MessageSquare,
             type: 'chat-presets',
+          },
+        ],
+      },
+      {
+        id: 'moon-studio',
+        title: 'Moon Studio',
+        items: [
+          {
+            title: 'Moon Studio',
+            url: '/moon-studio',
+            icon: Palette,
           },
         ],
       },
