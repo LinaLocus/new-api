@@ -51,7 +51,9 @@ export function useActiveChatKey(enabled: boolean) {
     queryKey: ['chat-active-key', userId],
     queryFn: fetchActiveChatKey,
     enabled: enabled && Boolean(userId),
-    staleTime: 5 * 60 * 1000,
-    gcTime: 10 * 60 * 1000,
+    staleTime: 10 * 60 * 1000, // 10 分钟内不重新请求
+    gcTime: 15 * 60 * 1000,    // 15 分钟后清除缓存
+    retry: 1,                   // 只重试 1 次，避免速率限制
+    retryDelay: 3000,           // 重试间隔 3 秒
   })
 }

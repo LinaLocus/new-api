@@ -21,6 +21,8 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { ExternalLink, Loader2, ChevronRight } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { useQueryClient } from '@tanstack/react-query'
+import { useAuthStore } from '@/stores/auth-store'
 import {
   Collapsible,
   CollapsibleContent,
@@ -159,6 +161,8 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
   const href = useLocation({ select: (location) => location.href })
   const [loadingPresetId, setLoadingPresetId] = useState<string | null>(null)
   const loadingPresetIdRef = useRef<string | null>(null)
+  const queryClient = useQueryClient()
+  const userId = useAuthStore((state) => state.auth.user?.id)
 
   const visiblePresets = useMemo(
     () => chatPresets.filter((preset) => preset.type !== 'fluent'),
@@ -181,7 +185,18 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
         loadingPresetIdRef.current = preset.id
         setLoadingPresetId(preset.id)
         try {
-          activeKey = await fetchActiveChatKey()
+          // 先尝试从缓存获取
+          const cachedKey = queryClient.getQueryData<string>(['chat-active-key', userId])
+          if (cachedKey) {
+            activeKey = cachedKey
+          } else {
+            // 缓存未命中，手动触发请求并缓存结果
+            activeKey = await queryClient.fetchQuery({
+              queryKey: ['chat-active-key', userId],
+              queryFn: fetchActiveChatKey,
+              staleTime: 10 * 60 * 1000,
+            })
+          }
         } catch (error) {
           const message =
             error instanceof Error
@@ -213,7 +228,7 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
       window.open(url, '_blank', 'noopener')
       setOpenMobile(false)
     },
-    [serverAddress, setOpenMobile, t]
+    [serverAddress, setOpenMobile, t, queryClient, userId]
   )
 
   const normalizedHref = normalizeHref(href)
