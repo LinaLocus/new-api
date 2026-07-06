@@ -30,10 +30,10 @@ export function useTokenKeys(id) {
     const loadAllData = async () => {
       const fetchedKeys = await fetchTokenKeys();
       if (fetchedKeys.length === 0) {
-        showError('当前没有可用的启用令牌，请确认是否有令牌处于启用状态！');
+        showError('无法自动准备 Moon Studio 令牌，请前往令牌管理手动创建一个启用令牌。');
         setTimeout(() => {
           window.location.href = '/console/token';
-        }, 1500); // 延迟 1.5 秒后跳转
+        }, 2000); // 延迟 2 秒后跳转
       }
       setKeys(fetchedKeys);
       setIsLoading(false);

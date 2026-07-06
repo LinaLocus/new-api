@@ -48,6 +48,35 @@ export async function fetchTokenKeysBatch(tokenIds) {
 }
 
 /**
+ * 为 Moon Studio 自动创建一个默认令牌（走用户余额计费、不过期、用默认分组）。
+ * 用于用户没有任何可用令牌时的无感兜底。
+ * @returns {Promise<object|null>} 创建并拉取到的启用令牌对象，失败返回 null
+ */
+async function createMoonStudioToken() {
+  try {
+    const res = await API.post('/api/token/', {
+      name: 'Moon Studio',
+      remain_quota: 0,
+      expired_time: -1,
+      unlimited_quota: true,
+      model_limits_enabled: false,
+      model_limits: '',
+      group: '',
+    });
+    if (!res.data?.success) return null;
+    // 重新拉取列表，拿到刚创建的令牌（带 id）
+    const list = await API.get('/api/token/?p=1&size=10');
+    const data = list.data?.data;
+    const items = Array.isArray(data) ? data : data?.items || [];
+    const active = items.filter((token) => token.status === 1);
+    return active.find((token) => !token.model_limits_enabled) || active[0] || null;
+  } catch (error) {
+    console.error('Error creating Moon Studio token:', error);
+    return null;
+  }
+}
+
+/**
  * 获取可用的 token keys
  * @returns {Promise<string[]>} 返回 active 状态的不带 sk- 前缀的真实 token key 数组
  */
@@ -58,7 +87,13 @@ export async function fetchTokenKeys() {
     if (!success) throw new Error('Failed to fetch token keys');
 
     const tokenItems = Array.isArray(data) ? data : data.items || [];
-    const activeTokens = tokenItems.filter((token) => token.status === 1);
+    let activeTokens = tokenItems.filter((token) => token.status === 1);
+
+    // 没有可用令牌：自动创建一个用于 Moon Studio 的默认令牌，实现无感进入
+    if (activeTokens.length === 0) {
+      const created = await createMoonStudioToken();
+      if (created) activeTokens = [created];
+    }
     if (activeTokens.length === 0) return [];
 
     // 只请求一个令牌的密钥，避免并发请求所有令牌触发关键接口限流(429)。
