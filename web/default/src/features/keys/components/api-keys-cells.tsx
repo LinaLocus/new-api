@@ -47,11 +47,21 @@ export function ApiKeyCell({ apiKey }: { apiKey: ApiKey }) {
     markKeyCopied,
   } = useApiKeys()
   const [popoverOpen, setPopoverOpen] = useState(false)
+  const preloadTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const isLoading = !!loadingKeys[apiKey.id]
   const resolvedFullKey = resolvedKeys[apiKey.id]
   const isCopied = copiedKeyId === apiKey.id
   const maskedKey = `sk-${apiKey.key}`
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (preloadTimerRef.current) {
+        clearTimeout(preloadTimerRef.current)
+      }
+    }
+  }, [])
 
   const handlePopoverOpen = useCallback(
     (open: boolean) => {
@@ -75,6 +85,28 @@ export function ApiKeyCell({ apiKey }: { apiKey: ApiKey }) {
       if (ok) markKeyCopied(apiKey.id)
     }
   }, [resolvedFullKey, resolveRealKey, apiKey.id, markKeyCopied, t])
+
+  // 防抖预加载
+  const handlePreload = useCallback(() => {
+    if (resolvedFullKey || isLoading) return
+
+    // 清除之前的定时器
+    if (preloadTimerRef.current) {
+      clearTimeout(preloadTimerRef.current)
+    }
+
+    // 延迟 500ms 再加载，避免鼠标快速滑过时触发
+    preloadTimerRef.current = setTimeout(() => {
+      void resolveRealKey(apiKey.id)
+    }, 500)
+  }, [resolvedFullKey, isLoading, resolveRealKey, apiKey.id])
+
+  const handlePreloadCancel = useCallback(() => {
+    if (preloadTimerRef.current) {
+      clearTimeout(preloadTimerRef.current)
+      preloadTimerRef.current = null
+    }
+  }, [])
 
   return (
     <div className='flex max-w-full min-w-0 items-center'>
@@ -123,12 +155,9 @@ export function ApiKeyCell({ apiKey }: { apiKey: ApiKey }) {
               size='icon'
               className='size-7 shrink-0'
               onClick={handleCopy}
-              onFocus={() => {
-                if (!resolvedFullKey) void resolveRealKey(apiKey.id)
-              }}
-              onPointerEnter={() => {
-                if (!resolvedFullKey) void resolveRealKey(apiKey.id)
-              }}
+              onFocus={handlePreload}
+              onPointerEnter={handlePreload}
+              onPointerLeave={handlePreloadCancel}
               disabled={isLoading}
             />
           }
