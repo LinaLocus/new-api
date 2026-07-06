@@ -102,13 +102,30 @@ export function DataTableRowActions<TData>({
   const [isTogglingStatus, setIsTogglingStatus] = useState(false)
   const resolvedRealKey = resolvedKeys[apiKey.id]
   const isRealKeyLoading = Boolean(loadingKeys[apiKey.id])
+  const menuPreloadTimerRef = useRef<NodeJS.Timeout | null>(null)
 
   const hasChatPresets = chatPresets.length > 0
+
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (menuPreloadTimerRef.current) {
+        clearTimeout(menuPreloadTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleMenuOpenChange = useCallback(
     (open: boolean) => {
       if (open && !resolvedRealKey && !isRealKeyLoading) {
-        void resolveRealKey(apiKey.id)
+        // 延迟 300ms 再加载，避免快速打开多个菜单时触发大量请求
+        menuPreloadTimerRef.current = setTimeout(() => {
+          void resolveRealKey(apiKey.id)
+        }, 300)
+      } else if (!open && menuPreloadTimerRef.current) {
+        // 菜单关闭时取消预加载
+        clearTimeout(menuPreloadTimerRef.current)
+        menuPreloadTimerRef.current = null
       }
     },
     [apiKey.id, isRealKeyLoading, resolvedRealKey, resolveRealKey]
