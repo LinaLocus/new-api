@@ -21,6 +21,7 @@ import { cn } from '@/lib/utils'
 import { useTopNavLinks } from '@/hooks/use-top-nav-links'
 import { defaultTopNavLinks } from '../config/top-nav.config'
 import type { TopNavLink } from '../types'
+import ShinyText from '@/components/ui/shiny-text'
 
 interface PublicNavigationProps {
   /**
@@ -50,6 +51,12 @@ export function PublicNavigation({
   return (
     <nav className={cn('hidden items-center gap-1 md:flex', className)}>
       {links.map((link, index) => {
+        const isMoonStudio = link.href === '/moon-studio'
+        const linkClassName = cn(
+          'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors focus:outline-none',
+          link.disabled && 'pointer-events-none opacity-50'
+        )
+
         // Handle external links
         if (link.external) {
           return (
@@ -58,12 +65,20 @@ export function PublicNavigation({
               href={link.href}
               target='_blank'
               rel='noopener noreferrer'
-              className={cn(
-                'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors focus:outline-none',
-                link.disabled && 'pointer-events-none opacity-50'
-              )}
+              className={linkClassName}
             >
-              {link.title}
+              {isMoonStudio ? (
+                <ShinyText
+                  text={link.title}
+                  speed={3}
+                  delay={1}
+                  color="hsl(var(--muted-foreground))"
+                  shineColor="hsl(var(--primary))"
+                  spread={90}
+                />
+              ) : (
+                link.title
+              )}
             </a>
           )
         }
@@ -72,12 +87,20 @@ export function PublicNavigation({
           <Link
             key={index}
             to={link.href}
-            className={cn(
-              'text-muted-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground inline-flex h-9 w-max items-center justify-center rounded-md bg-transparent px-4 py-2 text-sm font-medium transition-colors focus:outline-none',
-              link.disabled && 'pointer-events-none opacity-50'
-            )}
+            className={linkClassName}
           >
-            {link.title}
+            {isMoonStudio ? (
+              <ShinyText
+                text={link.title}
+                speed={3}
+                delay={1}
+                color="hsl(var(--muted-foreground))"
+                shineColor="hsl(var(--primary))"
+                spread={90}
+              />
+            ) : (
+              link.title
+            )}
           </Link>
         )
       })}

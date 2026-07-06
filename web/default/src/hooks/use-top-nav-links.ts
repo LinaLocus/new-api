@@ -99,10 +99,8 @@ export function useTopNavLinks(): TopNavLink[] {
     links.push({ title: t('About'), href: '/about' })
   }
 
-  // Moon Studio (always visible for authenticated users)
-  if (isAuthed) {
-    links.push({ title: 'Moon Studio', href: '/moon-studio' })
-  }
+  // Moon Studio (always visible, positioned after About)
+  links.push({ title: 'Moon Studio', href: '/moon-studio' })
 
   return links
 }
