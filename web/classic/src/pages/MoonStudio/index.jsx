@@ -18,13 +18,13 @@ For commercial licensing, please contact support@quantumnous.com
 */
 
 import React, { useMemo } from 'react';
-import { useTokenKeys } from '../../hooks/chat/useTokenKeys';
+import { useMoonStudioKey } from '../../hooks/chat/useMoonStudioKey';
 
 // Moon Studio 无限画布地址（你部署的 infinite-canvas）
 const MOON_STUDIO_URL = 'https://canvas.moonisapi.com';
 
 const MoonStudio = () => {
-  const { keys, serverAddress, isLoading } = useTokenKeys();
+  const { keys, serverAddress, isLoading } = useMoonStudioKey();
 
   const iframeSrc = useMemo(() => {
     if (!keys || keys.length === 0 || !serverAddress) return '';

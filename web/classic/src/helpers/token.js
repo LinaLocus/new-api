@@ -47,15 +47,27 @@ export async function fetchTokenKeysBatch(tokenIds) {
   return data.keys;
 }
 
+export const MOON_STUDIO_TOKEN_NAME = 'Moon Studio';
+
 /**
- * 为 Moon Studio 自动创建一个默认令牌（走用户余额计费、不过期、用默认分组）。
- * 用于用户没有任何可用令牌时的无感兜底。
- * @returns {Promise<object|null>} 创建并拉取到的启用令牌对象，失败返回 null
+ * 拉取当前用户的令牌列表（最多 100 个）
+ * @returns {Promise<object[]>}
+ */
+async function listUserTokens() {
+  const res = await API.get('/api/token/?p=1&size=100');
+  const { success, data } = res.data || {};
+  if (!success) throw new Error('Failed to list tokens');
+  return Array.isArray(data) ? data : data?.items || [];
+}
+
+/**
+ * 创建一个专用于 Moon Studio 的令牌（走用户余额、不过期、默认分组、无模型限制）。
+ * @returns {Promise<object|null>} 新创建的 Moon Studio 令牌对象，失败返回 null
  */
 async function createMoonStudioToken() {
   try {
     const res = await API.post('/api/token/', {
-      name: 'Moon Studio',
+      name: MOON_STUDIO_TOKEN_NAME,
       remain_quota: 0,
       expired_time: -1,
       unlimited_quota: true,
@@ -64,12 +76,12 @@ async function createMoonStudioToken() {
       group: '',
     });
     if (!res.data?.success) return null;
-    // 重新拉取列表，拿到刚创建的令牌（带 id）
-    const list = await API.get('/api/token/?p=1&size=10');
-    const data = list.data?.data;
-    const items = Array.isArray(data) ? data : data?.items || [];
-    const active = items.filter((token) => token.status === 1);
-    return active.find((token) => !token.model_limits_enabled) || active[0] || null;
+    const items = await listUserTokens();
+    return (
+      items.find(
+        (token) => token.status === 1 && token.name === MOON_STUDIO_TOKEN_NAME,
+      ) || null
+    );
   } catch (error) {
     console.error('Error creating Moon Studio token:', error);
     return null;
@@ -77,7 +89,42 @@ async function createMoonStudioToken() {
 }
 
 /**
- * 获取可用的 token keys
+ * Moon Studio 专用：找到（或自动创建）名为 "Moon Studio" 的专用令牌并返回其 key。
+ * 完全不使用用户的其他令牌，保证永远是 default 分组、无模型限制的合适令牌。
+ * @returns {Promise<string[]>} 不带 sk- 前缀的真实 key 数组（0 或 1 个）
+ */
+export async function fetchMoonStudioKeys() {
+  try {
+    let tokens = [];
+    try {
+      tokens = await listUserTokens();
+    } catch {
+      tokens = [];
+    }
+    let dedicated = tokens.find(
+      (token) =>
+        token.status === 1 &&
+        !token.model_limits_enabled &&
+        token.name === MOON_STUDIO_TOKEN_NAME,
+    );
+    if (!dedicated) {
+      dedicated = await createMoonStudioToken();
+    }
+    if (!dedicated) return [];
+    try {
+      const key = await fetchTokenKey(dedicated.id);
+      return key ? [key] : [];
+    } catch {
+      return [];
+    }
+  } catch (error) {
+    console.error('Error fetching Moon Studio keys:', error);
+    return [];
+  }
+}
+
+/**
+ * 获取可用的 token keys（聊天等通用场景使用，保持原行为）
  * @returns {Promise<string[]>} 返回 active 状态的不带 sk- 前缀的真实 token key 数组
  */
 export async function fetchTokenKeys() {
@@ -87,18 +134,10 @@ export async function fetchTokenKeys() {
     if (!success) throw new Error('Failed to fetch token keys');
 
     const tokenItems = Array.isArray(data) ? data : data.items || [];
-    let activeTokens = tokenItems.filter((token) => token.status === 1);
-
-    // 没有可用令牌：自动创建一个用于 Moon Studio 的默认令牌，实现无感进入
-    if (activeTokens.length === 0) {
-      const created = await createMoonStudioToken();
-      if (created) activeTokens = [created];
-    }
+    const activeTokens = tokenItems.filter((token) => token.status === 1);
     if (activeTokens.length === 0) return [];
 
     // 只请求一个令牌的密钥，避免并发请求所有令牌触发关键接口限流(429)。
-    // 优先选“无模型限制”的令牌，保证能访问全部模型（图片/视频等）；
-    // 若都没有无限制的，则退回第一个启用令牌。
     const preferred =
       activeTokens.find((token) => !token.model_limits_enabled) ||
       activeTokens[0];
