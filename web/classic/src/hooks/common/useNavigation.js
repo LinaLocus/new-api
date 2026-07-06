@@ -64,6 +64,11 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         itemKey: 'about',
         to: '/about',
       },
+      {
+        text: 'Moon Studio',
+        itemKey: 'moon-studio',
+        to: '/moon-studio',
+      },
     ];
 
     // 根据配置过滤导航链接
@@ -76,6 +81,10 @@ export const useNavigation = (t, docsLink, headerNavModules) => {
         return typeof modules.pricing === 'object'
           ? modules.pricing.enabled
           : modules.pricing;
+      }
+      // Moon Studio 始终显示
+      if (link.itemKey === 'moon-studio') {
+        return true;
       }
       return modules[link.itemKey] === true;
     });

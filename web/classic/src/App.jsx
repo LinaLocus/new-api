@@ -53,6 +53,7 @@ import SetupCheck from './components/layout/SetupCheck';
 const Home = lazy(() => import('./pages/Home'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const About = lazy(() => import('./pages/About'));
+const MoonStudio = lazy(() => import('./pages/MoonStudio'));
 const UserAgreement = lazy(() => import('./pages/UserAgreement'));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
 
@@ -339,6 +340,14 @@ function App() {
           element={
             <Suspense fallback={<Loading></Loading>} key={location.pathname}>
               <About />
+            </Suspense>
+          }
+        />
+        <Route
+          path='/moon-studio'
+          element={
+            <Suspense fallback={<Loading></Loading>} key={location.pathname}>
+              <MoonStudio />
             </Suspense>
           }
         />
