@@ -21,6 +21,7 @@ import { Link } from '@tanstack/react-router'
 import { Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import ShinyText from '@/components/ui/shiny-text'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,31 +63,57 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent side='bottom' align='start'>
             {normalizedLinks.map(
-              ({ title, href, isActive, disabled, external }) => (
-                <DropdownMenuItem
-                  key={`${title}-${href}`}
-                  render={
-                    external ? (
-                      <a
-                        href={href}
-                        target='_blank'
-                        rel='noopener noreferrer'
-                        className={!isActive ? 'text-muted-foreground' : ''}
-                      >
-                        {title}
-                      </a>
-                    ) : (
-                      <Link
-                        to={href}
-                        className={!isActive ? 'text-muted-foreground' : ''}
-                        disabled={disabled}
-                      >
-                        {title}
-                      </Link>
-                    )
-                  }
-                ></DropdownMenuItem>
-              )
+              ({ title, href, isActive, disabled, external }) => {
+                const isMoonStudio = href === '/moon-studio'
+
+                return (
+                  <DropdownMenuItem
+                    key={`${title}-${href}`}
+                    render={
+                      external ? (
+                        <a
+                          href={href}
+                          target='_blank'
+                          rel='noopener noreferrer'
+                          className={!isActive ? 'text-muted-foreground' : ''}
+                        >
+                          {isMoonStudio ? (
+                            <ShinyText
+                              text={title}
+                              speed={3}
+                              delay={1}
+                              color={isActive ? 'currentColor' : 'hsl(var(--muted-foreground))'}
+                              shineColor="hsl(var(--primary))"
+                              spread={90}
+                            />
+                          ) : (
+                            title
+                          )}
+                        </a>
+                      ) : (
+                        <Link
+                          to={href}
+                          className={!isActive ? 'text-muted-foreground' : ''}
+                          disabled={disabled}
+                        >
+                          {isMoonStudio ? (
+                            <ShinyText
+                              text={title}
+                              speed={3}
+                              delay={1}
+                              color={isActive ? 'currentColor' : 'hsl(var(--muted-foreground))'}
+                              shineColor="hsl(var(--primary))"
+                              spread={90}
+                            />
+                          ) : (
+                            title
+                          )}
+                        </Link>
+                      )
+                    }
+                  ></DropdownMenuItem>
+                )
+              }
             )}
           </DropdownMenuContent>
         </DropdownMenu>
@@ -100,28 +127,57 @@ export function TopNav({ className, links, ...props }: TopNavProps) {
         )}
         {...props}
       >
-        {normalizedLinks.map(({ title, href, isActive, disabled, external }) =>
-          external ? (
-            <a
-              key={`${title}-${href}`}
-              href={href}
-              target='_blank'
-              rel='noopener noreferrer'
-              className={`hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`}
-            >
-              {title}
-            </a>
-          ) : (
+        {normalizedLinks.map(({ title, href, isActive, disabled, external }) => {
+          const isMoonStudio = href === '/moon-studio'
+          const linkClassName = `hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`
+
+          if (external) {
+            return (
+              <a
+                key={`${title}-${href}`}
+                href={href}
+                target='_blank'
+                rel='noopener noreferrer'
+                className={linkClassName}
+              >
+                {isMoonStudio ? (
+                  <ShinyText
+                    text={title}
+                    speed={3}
+                    delay={1}
+                    color={isActive ? 'currentColor' : 'hsl(var(--muted-foreground))'}
+                    shineColor="hsl(var(--primary))"
+                    spread={90}
+                  />
+                ) : (
+                  title
+                )}
+              </a>
+            )
+          }
+
+          return (
             <Link
               key={`${title}-${href}`}
               to={href}
               disabled={disabled}
-              className={`hover:text-primary text-sm font-medium transition-colors ${isActive ? '' : 'text-muted-foreground'}`}
+              className={linkClassName}
             >
-              {title}
+              {isMoonStudio ? (
+                <ShinyText
+                  text={title}
+                  speed={3}
+                  delay={1}
+                  color={isActive ? 'currentColor' : 'hsl(var(--muted-foreground))'}
+                  shineColor="hsl(var(--primary))"
+                  spread={90}
+                />
+              ) : (
+                title
+              )}
             </Link>
           )
-        )}
+        })}
       </nav>
     </>
   )

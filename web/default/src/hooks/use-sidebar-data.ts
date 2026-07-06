@@ -65,17 +65,6 @@ export function useSidebarData(): SidebarData {
         ],
       },
       {
-        id: 'moon-studio',
-        title: 'Moon Studio',
-        items: [
-          {
-            title: 'Moon Studio',
-            url: '/moon-studio',
-            icon: Palette,
-          },
-        ],
-      },
-      {
         id: 'general',
         title: t('General'),
         items: [
