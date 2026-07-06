@@ -39,9 +39,11 @@ function MoonStudioPage() {
     if (!activeKey) return null
 
     // 构建 Moon Studio URL，传递 API Key 和 Base URL
+    // locked=1 锁定渠道配置，禁止用户切换到其他供应商
     const canvasUrl = new URL('https://canvas.moonisapi.com')
     canvasUrl.searchParams.set('apiKey', activeKey)
     canvasUrl.searchParams.set('baseUrl', serverAddress)
+    canvasUrl.searchParams.set('locked', '1')
 
     return canvasUrl.toString()
   }, [activeKey, serverAddress])
