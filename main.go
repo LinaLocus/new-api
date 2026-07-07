@@ -198,7 +198,13 @@ func main() {
 		sessionOptions.Secure = true
 	}
 	store.Options(sessionOptions)
-	server.Use(sessions.Sessions("session", store))
+	// 可选：自定义会话 Cookie 名。改名可让旧的同名 cookie 被直接忽略，避免更换 Cookie 作用域/密钥时
+	// 新旧 cookie 冲突导致反复“会话已过期”。未设置时保持默认 "session"。
+	sessionCookieName := os.Getenv("SESSION_COOKIE_NAME")
+	if sessionCookieName == "" {
+		sessionCookieName = "session"
+	}
+	server.Use(sessions.Sessions(sessionCookieName, store))
 
 	InjectUmamiAnalytics()
 	InjectGoogleAnalytics()
