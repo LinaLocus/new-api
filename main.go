@@ -177,13 +177,27 @@ func main() {
 	middleware.SetUpLogger(server)
 	// Initialize session store
 	store := cookie.NewStore([]byte(common.SessionSecret))
-	store.Options(sessions.Options{
+	sessionOptions := sessions.Options{
 		Path:     "/",
 		MaxAge:   2592000, // 30 days
 		HttpOnly: true,
 		Secure:   false,
 		SameSite: http.SameSiteStrictMode,
-	})
+	}
+	// 可选：设置 Cookie 作用域为父域（如 .moonisapi.com），使会话可被同域子域（Moon Studio 画布）读取，
+	// 用于跨子域校验登录状态。未设置时保持原 host-only 行为。
+	if cookieDomain := os.Getenv("SESSION_COOKIE_DOMAIN"); cookieDomain != "" {
+		sessionOptions.Domain = cookieDomain
+	}
+	// 可选：放宽 SameSite（lax/none）。跨子域 iframe 场景下建议 lax，使会话 cookie 能随同站导航发送。
+	switch strings.ToLower(os.Getenv("SESSION_COOKIE_SAMESITE")) {
+	case "lax":
+		sessionOptions.SameSite = http.SameSiteLaxMode
+	case "none":
+		sessionOptions.SameSite = http.SameSiteNoneMode
+		sessionOptions.Secure = true
+	}
+	store.Options(sessionOptions)
 	server.Use(sessions.Sessions("session", store))
 
 	InjectUmamiAnalytics()

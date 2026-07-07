@@ -12,49 +12,27 @@ For commercial licensing, please contact support@quantumnous.com
 package controller
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/base64"
-	"encoding/json"
 	"net/http"
-	"os"
-	"time"
 
+	"github.com/QuantumNous/new-api/common"
+
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
-// GetMoonStudioTicket 为已登录用户签发一张短期有效、HMAC 签名的票据。
-// Moon Studio(画布）的中间件用共享密钥校验该票据，确保只有从 Moon API
-// 跳转的已登录用户才能访问画布，直接访问域名会被拦截。
-func GetMoonStudioTicket(c *gin.Context) {
-	secret := os.Getenv("MOON_STUDIO_SECRET")
-	if secret == "" {
-		c.JSON(http.StatusOK, gin.H{
-			"success": false,
-			"message": "Moon Studio 未配置 MOON_STUDIO_SECRET",
-		})
+// GetMoonStudioVerify 供 Moon Studio（画布）中间件跨子域校验当前是否处于登录状态。
+// 直接读会话（不依赖 New-Api-User 头，因此中间件转发 session cookie 即可校验），
+// 登录且账号启用返回 success=true，否则 false。用于确保退出登录后画布立即失去访问权。
+func GetMoonStudioVerify(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("id")
+	if id == nil {
+		c.JSON(http.StatusOK, gin.H{"success": false})
 		return
 	}
-
-	userId := c.GetInt("id")
-	payload := map[string]interface{}{
-		"uid": userId,
-		"exp": time.Now().Add(12 * time.Hour).Unix(),
-	}
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		c.JSON(http.StatusOK, gin.H{"success": false, "message": "签发票据失败"})
+	if status, ok := session.Get("status").(int); ok && status != common.UserStatusEnabled {
+		c.JSON(http.StatusOK, gin.H{"success": false})
 		return
 	}
-
-	payloadB64 := base64.RawURLEncoding.EncodeToString(payloadBytes)
-	mac := hmac.New(sha256.New, []byte(secret))
-	mac.Write([]byte(payloadB64))
-	sig := base64.RawURLEncoding.EncodeToString(mac.Sum(nil))
-	ticket := payloadB64 + "." + sig
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"data":    gin.H{"ticket": ticket},
-	})
+	c.JSON(http.StatusOK, gin.H{"success": true})
 }
