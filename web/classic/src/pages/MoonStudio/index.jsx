@@ -17,14 +17,37 @@ along with this program. If not, see <https://www.gnu.org/licenses/>.
 For commercial licensing, please contact support@quantumnous.com
 */
 
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useMoonStudioKey } from '../../hooks/chat/useMoonStudioKey';
+import { API } from '../../helpers/api';
 
 // Moon Studio 无限画布地址（你部署的 infinite-canvas）
 const MOON_STUDIO_URL = 'https://canvas.moonisapi.com';
 
 const MoonStudio = () => {
   const { keys, serverAddress, isLoading } = useMoonStudioKey();
+  const [ticket, setTicket] = useState('');
+  const [ticketReady, setTicketReady] = useState(false);
+
+  // 向后端申请一张签名票据，交给画布中间件校验，防止直接访问 canvas 域名
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await API.get('/api/moon_studio/ticket');
+        if (mounted && res.data?.success) {
+          setTicket(res.data.data?.ticket || '');
+        }
+      } catch {
+        // 忽略：拿不到票据时由画布中间件决定是否放行
+      } finally {
+        if (mounted) setTicketReady(true);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const iframeSrc = useMemo(() => {
     if (!keys || keys.length === 0 || !serverAddress) return '';
@@ -33,10 +56,12 @@ const MoonStudio = () => {
     url.searchParams.set('baseUrl', serverAddress);
     // locked=1 锁定渠道配置，禁止用户切换到其他供应商
     url.searchParams.set('locked', '1');
+    // ticket 为签名票据，画布中间件据此放行（防止绕过 Moon API 直接访问）
+    if (ticket) url.searchParams.set('ticket', ticket);
     return url.toString();
-  }, [keys, serverAddress]);
+  }, [keys, serverAddress, ticket]);
 
-  if (isLoading) {
+  if (isLoading || !ticketReady) {
     return (
       <div className='mt-[60px] px-2'>
         <h3>正在加载 Moon Studio，请稍候...</h3>
